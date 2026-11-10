@@ -14,47 +14,47 @@
 <style>
 :root{--bg:#0f3d2e;--bg2:#0b2d22;--card:#154a38;--line:#2a6a52;--gold:#e3c16f;--text:#f3efe2;--muted:#a9c4b8;--ok:#7bd88f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;background:var(--bg2);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 2px 6px}
+html,body{margin:0;background:var(--bg2);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{display:flex;flex-direction:column;min-height:100dvh;max-width:520px;margin:0 auto;padding:env(safe-area-inset-top) 14px calc(env(safe-area-inset-bottom) + 28px);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 2px 2px}
 header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
 header .date{font-size:12px;color:var(--muted);margin-top:2px}
 .streak{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--gold);font-weight:600}
-.week{display:flex;gap:6px;justify-content:space-between;margin:8px 0 12px}
+.week{display:flex;gap:6px;justify-content:space-between;margin:6px 0 10px}
 .day{flex:1;text-align:center;font-size:10px;color:var(--muted)}
 .day i{display:block;height:6px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
 .day i b{display:block;height:100%;background:var(--gold)}
 .day.full i b{background:var(--ok)}
 .day.today{color:var(--text);font-weight:700}
 .tabs{display:flex;gap:8px;margin-bottom:12px}
-.tab{flex:1;padding:10px 6px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:14px;font-weight:600;text-align:center}
+.tab{flex:1;padding:8px 4px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:14px;font-weight:600;text-align:center}
 .tab small{display:block;font-size:10px;font-weight:400;margin-top:2px}
 .tab.active{background:var(--card);color:var(--text);border-color:var(--gold)}
 .tab.done small{color:var(--ok)}
-main{flex:1;display:flex;flex-direction:column;min-height:0}
-.hero{flex:1;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;position:relative;min-height:0}
+main{display:flex;flex-direction:column}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;position:relative}
 .hero:active{transform:scale(.99)}
-.ar{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro","Traditional Arabic",serif;direction:rtl;line-height:1.8;color:var(--gold);font-size:28px;margin:0 0 6px}
-.ar.big{font-size:32px}
+.ar{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro","Traditional Arabic",serif;direction:rtl;line-height:1.8;color:var(--gold);font-size:23px;line-height:1.7;margin:0 0 4px}
+.ar.big{font-size:28px}
 .ms{font-size:12px;color:var(--muted);margin:0 0 10px;max-width:90%}
-.ring{position:relative;width:190px;height:190px;margin:4px 0}
+.ring{position:relative;width:150px;height:150px;margin:2px 0}
 .ring svg{transform:rotate(-90deg)}
 .ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring .num b{font-size:52px;line-height:1;font-variant-numeric:tabular-nums}
+.ring .num b{font-size:42px;line-height:1;font-variant-numeric:tabular-nums}
 .ring .num span{font-size:13px;color:var(--muted);margin-top:4px}
 .hint{font-size:12px;color:var(--muted);margin-top:8px}
 .complete{color:var(--ok);font-weight:700;font-size:15px;margin-top:6px}
 .actions{display:flex;gap:10px;margin:10px 0 8px}
 .btn{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:14px}
 .btn:active{background:var(--card)}
-.chips{display:flex;gap:8px;margin-bottom:12px}
+.chips{display:flex;gap:8px;margin-bottom:10px}
 .chip{flex:1;padding:8px 6px;border-radius:12px;border:1px solid var(--line);font-size:12px;text-align:center;color:var(--muted);background:transparent}
 .chip.sel{border-color:var(--gold);color:var(--text);background:var(--card)}
 .chip.done{color:var(--ok)}
-.chip .a{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;font-size:16px;display:block;direction:rtl}
+.chip .a{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;font-size:15px;line-height:1.6;display:block;direction:rtl;white-space:nowrap;overflow:hidden}
 .mulk-btn{width:150px;height:150px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;margin:10px 0;background:transparent;color:var(--gold)}
 .mulk-btn.on{background:var(--ok);border-color:var(--ok);color:#0b2d22}
-.prayer{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:12px}
+.prayer{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 10px;margin-bottom:10px}
 .prayer .pinfo{flex:1;min-width:0}
 .prayer .pinfo b{display:block;font-size:14px}
 .prayer .pinfo span{font-size:11px;color:var(--muted)}
@@ -140,7 +140,7 @@ function render(){
     w+=`<div class="day ${i===0?"today":""} ${p>=1?"full":""}">${d.toLocaleDateString("en-GB",{weekday:"narrow"})}<i><b style="width:${Math.round(p*100)}%"></b></i></div>`}
   document.getElementById("week").innerHTML=w;
   // tabs
-  document.getElementById("tabs").innerHTML=SLOTS.map(s=>`<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.name}<small>${slotDone(k,s.id)?"✓ done":s.sub+(ptime(s.id)?" · "+ptime(s.id):"")}</small></button>`).join("");
+  document.getElementById("tabs").innerHTML=SLOTS.map(s=>`<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.name}<small>${slotDone(k,s.id)?"✓ done":(ptime(s.id)||s.sub)}</small></button>`).join("");
   // main
   const s=SLOTS.find(x=>x.id===slot),itemId=s.items[sel[slot]],it=ITEMS[itemId],c=cnt(k,slot,itemId),T=it.target;
   let html="";
@@ -154,7 +154,7 @@ function render(){
   }else{
     const R=88,C=2*Math.PI*R,off=C*(1-Math.min(c/T,1));
     html+=`<div class="hero" onclick="tap()"><p class="ar">${it.ar}</p><p class="ms">${it.ms}</p>
-    <div class="ring"><svg width="190" height="190" viewBox="0 0 190 190"><circle cx="95" cy="95" r="${R}" fill="none" stroke="#2a6a52" stroke-width="10"/><circle cx="95" cy="95" r="${R}" fill="none" stroke="${c>=T?"#7bd88f":"#e3c16f"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .15s"/></svg>
+    <div class="ring"><svg width="150" height="150" viewBox="0 0 190 190"><circle cx="95" cy="95" r="${R}" fill="none" stroke="#2a6a52" stroke-width="10"/><circle cx="95" cy="95" r="${R}" fill="none" stroke="${c>=T?"#7bd88f":"#e3c16f"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .15s"/></svg>
     <div class="num"><b>${c}</b><span>of ${T}</span></div></div>
     <div class="${c>=T?"complete":"hint"}">${c>=T?"Completed ✓":"Tap anywhere to count"}</div></div>
     <div class="actions"><button class="btn" onclick="minus()">− Undo one</button><button class="btn" onclick="resetItem()">Reset</button></div>`;
@@ -217,7 +217,7 @@ function renderPrayer(){
   const el=document.getElementById("prayer");if(!el)return;
   const ev=nextEvent();let main,sub;
   if(ev){const mins=Math.max(0,Math.round((ev.t-new Date())/60000)),hh=Math.floor(mins/60),mm=mins%60;
-    main=`${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m · zikir reminder +${pr.offset}m`}
+    main=`${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`}
   else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM method"}
   el.innerHTML=`<div class="pinfo"><b>${main}</b><span>${sub}</span></div>
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>

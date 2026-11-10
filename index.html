@@ -83,6 +83,19 @@ main{display:flex;flex-direction:column}
 .times .row.next{color:var(--gold);font-weight:700}
 .times .row.passed{color:var(--muted)}
 .hj{color:var(--gold);font-size:12px;margin-top:1px}
+input{-webkit-user-select:text;user-select:text}
+.btn.plus{border-color:var(--gold);color:var(--gold);font-weight:600}
+.sheetbg{position:fixed;inset:0;background:rgba(40,60,50,.35);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.sheetbg.show{display:flex}
+.sheet{width:100%;max-width:520px;background:var(--card);border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);box-shadow:0 -8px 24px rgba(0,0,0,.15)}
+.sheet h3{margin:0 0 4px;font-size:16px}
+.sheet p{margin:0 0 12px;font-size:12px;color:var(--muted)}
+.sheet input{width:100%;font-size:28px;text-align:center;padding:12px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--text);outline:none}
+.sheet input:focus{border-color:var(--gold)}
+.presets{display:flex;gap:8px;margin:10px 0}
+.presets button{flex:1;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:14px}
+.srow{display:flex;gap:10px}
+.btn.go{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:700}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
 .toast.show{opacity:1}
 </style>
@@ -96,6 +109,17 @@ main{display:flex;flex-direction:column}
 <div class="prayer" id="prayer"></div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
+<div class="sheetbg" id="sheet" onclick="if(event.target===this)closeAdd()">
+  <div class="sheet">
+    <h3 id="sheetTitle">Add count done outside the app</h3>
+    <p id="sheetSub"></p>
+    <input id="addN" type="number" inputmode="numeric" min="1" placeholder="How many?">
+    <div class="presets">
+      <button onclick="setAdd(10)">+10</button><button onclick="setAdd(33)">+33</button><button onclick="setAdd(50)">+50</button><button onclick="setAdd(99999)">Finish all</button>
+    </div>
+    <div class="srow"><button class="btn" onclick="closeAdd()">Cancel</button><button class="btn go" onclick="doAdd()">Add</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -144,6 +168,29 @@ function tap(){
   }else vib(c%33===32?[40,30,40]:8);
   render();
 }
+function curItem(){const s=SLOTS.find(x=>x.id===slot),i=s.items[sel[slot]];return {s,i,key:slot+":"+i,T:ITEMS[i].target}}
+function openAdd(){
+  const {s,i,key,T}=curItem(),c=cnt(today(),slot,i);
+  document.getElementById("sheetSub").textContent=`${s.tab} · now ${c} of ${T}. Enter what you counted elsewhere (e.g. with beads).`;
+  const inp=document.getElementById("addN");inp.value="";
+  document.getElementById("sheet").classList.add("show");setTimeout(()=>inp.focus(),50);
+}
+function closeAdd(){document.getElementById("sheet").classList.remove("show")}
+function setAdd(n){const {i}=curItem(),rem=ITEMS[i].target-cnt(today(),slot,i);document.getElementById("addN").value=Math.max(0,Math.min(n,rem))||""}
+function doAdd(){
+  const n=parseInt(document.getElementById("addN").value,10);
+  if(!n||n<1){toast("Enter a number");return}
+  const k=today(),d=dayData(k),{s,i,key,T}=curItem(),c=d[key]||0;
+  d[key]=Math.min(T,c+n);save();closeAdd();
+  if(d[key]>=T){
+    vib([60,50,60]);
+    const nxt=s.items.findIndex((x,ix)=>ix>sel[slot]&&cnt(k,slot,x)<ITEMS[x].target);
+    if(slotDone(k,slot))toast("Alhamdulillah, "+s.name+" complete");
+    else if(nxt>=0){sel[slot]=nxt;toast("Added. Next zikir")}
+    else toast("Added");
+  }else toast("Added "+n);
+  render();
+}
 function minus(){const k=today(),d=dayData(k),s=SLOTS.find(x=>x.id===slot),i=s.items[sel[slot]],key=slot+":"+i;if(d[key]>0){d[key]--;save();render()}}
 function resetItem(){const k=today(),d=dayData(k),s=SLOTS.find(x=>x.id===slot),i=s.items[sel[slot]];if(confirm("Reset this counter to 0?")){d[slot+":"+i]=0;save();render()}}
 
@@ -183,7 +230,7 @@ function render(){
     <div class="ring"><svg width="150" height="150" viewBox="0 0 190 190"><circle cx="95" cy="95" r="${R}" fill="none" stroke="#dcece3" stroke-width="10"/><circle cx="95" cy="95" r="${R}" fill="none" stroke="${c>=T?"#5cbf8a":"#e39a73"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .15s"/></svg>
     <div class="num"><b>${c}</b><span>of ${T}</span></div></div>
     <div class="${c>=T?"complete":"hint"}">${c>=T?"Completed ✓":"Tap anywhere to count"}</div></div>
-    <div class="actions"><button class="btn" onclick="minus()">− Undo one</button><button class="btn" onclick="resetItem()">Reset</button></div>`;
+    <div class="actions"><button class="btn" onclick="minus()">− Undo one</button><button class="btn plus" onclick="openAdd()">+ Add count</button><button class="btn" onclick="resetItem()">Reset</button></div>`;
   }
   document.getElementById("main").innerHTML=html;
 }

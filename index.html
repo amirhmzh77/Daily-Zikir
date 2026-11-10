@@ -220,6 +220,16 @@ async function fetchJakim(d){
   if(j.zone)pr.zone=j.zone;
   return {src:"jakim",days};
 }
+async function fetchEsolat(d){ // JAKIM e-solat official API (current month only)
+  const now=new Date();if(ymKey(d)!==ymKey(now))throw new Error("month");
+  const lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
+  const zone=pr.zone||((lat>1.2&&lat<2.9&&lng>102.4&&lng<104.6)?"JHR02":null);if(!zone)throw new Error("zone");
+  const res=await fetch(`https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=month&zone=${zone}`);
+  const j=await res.json();const arr=j.prayerTime;if(!Array.isArray(arr)||arr.length<28)throw new Error("shape");
+  const y=d.getFullYear(),mo=d.getMonth()+1;
+  pr.zone=zone;
+  return {src:"jakim",days:arr.map((x,i)=>({h:x.hijri,f:toMs(x.fajr,y,mo,i+1),s:toMs(x.syuruk,y,mo,i+1),d:toMs(x.dhuhr,y,mo,i+1),a:toMs(x.asr,y,mo,i+1),m:toMs(x.maghrib,y,mo,i+1),i:toMs(x.isha,y,mo,i+1)}))};
+}
 async function fetchAladhan(d){ // fallback; Hijri date here is approximate, not JAKIM
   const y=d.getFullYear(),mo=d.getMonth()+1,lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
   const res=await fetch(`https://api.aladhan.com/v1/calendar/${y}/${mo}?latitude=${lat}&longitude=${lng}&method=17`);
@@ -230,7 +240,7 @@ async function fetchAladhan(d){ // fallback; Hijri date here is approximate, not
 async function loadMonth(d){
   const ym=ymKey(d);if(pr.m3[ym])return true;
   let data=null;
-  try{data=await fetchJakim(d)}catch(e){try{data=await fetchAladhan(d)}catch(_){}}
+  try{data=await fetchJakim(d)}catch(e){try{data=await fetchEsolat(d)}catch(e2){try{data=await fetchAladhan(d)}catch(_){}}}
   if(!data)return false;
   pr.m3[ym]=data;Object.keys(pr.m3).sort().slice(0,-2).forEach(k=>delete pr.m3[k]);delete pr.months;savePr();return true;
 }

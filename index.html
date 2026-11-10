@@ -54,7 +54,15 @@ main{display:flex;flex-direction:column}
 .chip .a{font-size:14px;font-weight:600;line-height:1.5;display:block;white-space:nowrap;overflow:hidden;color:inherit}
 .mulk-btn{width:150px;height:150px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;margin:10px 0;background:transparent;color:var(--gold)}
 .mulk-btn.on{background:var(--ok);border-color:var(--ok);color:#0b2d22}
-.prayer{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 10px;margin-bottom:10px}
+.prayer{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:10px}
+.prow{display:flex;align-items:center;gap:6px}
+.pstrip{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
+.pc{text-align:center;padding:5px 0 4px;border-radius:8px;font-size:9.5px;color:var(--muted);line-height:1.25}
+.pc b{display:block;font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.pc i{display:block;font-style:normal;font-size:8.5px}
+.pc.next{background:#1d5a46;color:var(--gold)}
+.pc.next b{color:var(--gold)}
+.pc.passed b{color:var(--muted)}
 .prayer .pinfo{flex:1;min-width:0}
 .prayer .pinfo b{display:block;font-size:14px}
 .prayer .pinfo span{font-size:11px;color:var(--muted)}
@@ -80,7 +88,6 @@ main{display:flex;flex-direction:column}
 <div class="prayer" id="prayer"></div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
-<div class="times" id="times"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -243,26 +250,17 @@ function allEvents(){
   return out.sort((a,b)=>a.t-b.t);
 }
 function nextEvent(){const now=new Date();return allEvents().find(e=>e.t>now)}
-function renderTimes(){
-  const el=document.getElementById("times");if(!el)return;
-  const t=dayTimes(new Date());
-  if(!t){el.style.display="none";return}
-  el.style.display="";
-  const ev=nextEvent(),now=new Date();
-  el.innerHTML=`<div class="hd"><span>Waktu Solat</span><span>${pr.zone?pr.zone+" · ":""}${t.src==="jakim"?"JAKIM":"approx."}</span></div>`+
-    ORDER.map(id=>`<div class="row ${ev&&ev.id===id?"next":t[id]<now?"passed":""}"><span>${PNAMES[id]}</span><span>${fmt(t[id])}</span></div>`).join("");
-}
 function renderPrayer(){
   const el=document.getElementById("prayer");if(!el)return;
-  const ev=nextEvent();let main,sub;
-  if(ev){const mins=Math.max(0,Math.round((ev.t-new Date())/60000)),hh=Math.floor(mins/60),mm=mins%60;
-    main=`${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`}
+  const ev=nextEvent(),t=dayTimes(new Date()),now=new Date();let main,sub;
+  if(ev){const mins=Math.max(0,Math.round((ev.t-now)/60000)),hh=Math.floor(mins/60),mm=mins%60;
+    main=`Next: ${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`+(t?` · ${pr.zone?pr.zone+" ":""}${t.src==="jakim"?"JAKIM":"approx."}`:"")}
   else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM"}
-  el.innerHTML=`<div class="pinfo"><b>${main}</b><span>${sub}</span></div>
+  const strip=t?`<div class="pstrip">`+ORDER.map(id=>{const f=fmt(t[id]).split(" ");return `<div class="pc ${ev&&ev.id===id?"next":t[id]<now?"passed":""}">${PNAMES[id]}<b>${f[0]}</b><i>${f[1]||""}</i></div>`}).join("")+`</div>`:"";
+  el.innerHTML=`<div class="prow"><div class="pinfo"><b>${main}</b><span>${sub}</span></div>
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
-  <button onclick="getLoc()">📍</button>`;
-  renderTimes();
+  <button onclick="getLoc()">📍</button></div>${strip}`;
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
 async function toggleNotify(){

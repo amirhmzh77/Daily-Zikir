@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0f3d2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zikir">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Daily Zikir</title>
+<style>
+:root{--bg:#0f3d2e;--bg2:#0b2d22;--card:#154a38;--line:#2a6a52;--gold:#e3c16f;--text:#f3efe2;--muted:#a9c4b8;--ok:#7bd88f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:var(--bg2);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{display:flex;flex-direction:column;max-width:520px;margin:0 auto;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 2px 6px}
+header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
+header .date{font-size:12px;color:var(--muted);margin-top:2px}
+.streak{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--gold);font-weight:600}
+.week{display:flex;gap:6px;justify-content:space-between;margin:8px 0 12px}
+.day{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.day i{display:block;height:6px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
+.day i b{display:block;height:100%;background:var(--gold)}
+.day.full i b{background:var(--ok)}
+.day.today{color:var(--text);font-weight:700}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{flex:1;padding:10px 6px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:14px;font-weight:600;text-align:center}
+.tab small{display:block;font-size:10px;font-weight:400;margin-top:2px}
+.tab.active{background:var(--card);color:var(--text);border-color:var(--gold)}
+.tab.done small{color:var(--ok)}
+main{flex:1;display:flex;flex-direction:column;min-height:0}
+.hero{flex:1;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;position:relative;min-height:0}
+.hero:active{transform:scale(.99)}
+.ar{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro","Traditional Arabic",serif;direction:rtl;line-height:1.8;color:var(--gold);font-size:28px;margin:0 0 6px}
+.ar.big{font-size:32px}
+.ms{font-size:12px;color:var(--muted);margin:0 0 10px;max-width:90%}
+.ring{position:relative;width:190px;height:190px;margin:4px 0}
+.ring svg{transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num b{font-size:52px;line-height:1;font-variant-numeric:tabular-nums}
+.ring .num span{font-size:13px;color:var(--muted);margin-top:4px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.complete{color:var(--ok);font-weight:700;font-size:15px;margin-top:6px}
+.actions{display:flex;gap:10px;margin:10px 0 8px}
+.btn{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:14px}
+.btn:active{background:var(--card)}
+.chips{display:flex;gap:8px;margin-bottom:12px}
+.chip{flex:1;padding:8px 6px;border-radius:12px;border:1px solid var(--line);font-size:12px;text-align:center;color:var(--muted);background:transparent}
+.chip.sel{border-color:var(--gold);color:var(--text);background:var(--card)}
+.chip.done{color:var(--ok)}
+.chip .a{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;font-size:16px;display:block;direction:rtl}
+.mulk-btn{width:150px;height:150px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;margin:10px 0;background:transparent;color:var(--gold)}
+.mulk-btn.on{background:var(--ok);border-color:var(--ok);color:#0b2d22}
+.prayer{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:12px}
+.prayer .pinfo{flex:1;min-width:0}
+.prayer .pinfo b{display:block;font-size:14px}
+.prayer .pinfo span{font-size:11px;color:var(--muted)}
+.prayer button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;height:34px;min-width:34px;padding:0 8px;font-size:13px}
+.prayer button.on{border-color:var(--gold);color:var(--gold)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#0b2d22;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Daily Zikir</h1><div class="date" id="date"></div></div>
+  <div class="streak" id="streak"></div>
+</header>
+<div class="week" id="week"></div>
+<div class="prayer" id="prayer"></div>
+<div class="tabs" id="tabs"></div>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+const ITEMS = {
+  z1:{ar:"سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ",ms:"Glory be to Allah, all praise is for Allah, there is no god but Allah, Allah is the Greatest",short:"سبحان الله…",target:100},
+  z2:{ar:"أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ",ms:"I seek forgiveness from Allah the Almighty",short:"أستغفر الله",target:100},
+  z3:{ar:"اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ، اللَّهُمَّ صَلِّ عَلَيْهِ وَسَلِّمْ",ms:"O Allah, send blessings upon Muhammad; O Allah, send blessings and peace upon him",short:"اللهم صل…",target:100},
+  mulk:{ar:"سُورَةُ المُلْك",ms:"Surah Al-Mulk, recite once",short:"الملك",target:1}
+};
+const SLOTS = [
+  {id:"subuh",name:"Subuh",sub:"After Fajr",items:["z1","z2","z3"]},
+  {id:"asar",name:"Asar",sub:"After Asr",items:["z1","z2","z3"]},
+  {id:"isyak",name:"Isyak",sub:"After Isha",items:["mulk"]}
+];
+const KEY="zikir.v1";
+let store={days:{}};
+try{store=JSON.parse(localStorage.getItem(KEY))||store}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+const dkey=d=>{const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const today=()=>dkey(new Date());
+const dayData=k=>store.days[k]||(store.days[k]={});
+const cnt=(k,s,i)=>(store.days[k]&&store.days[k][s+":"+i])||0;
+const slotDone=(k,s)=>SLOTS.find(x=>x.id===s).items.every(i=>cnt(k,s,i)>=ITEMS[i].target);
+const dayTotals=k=>{let d=0,t=0;SLOTS.forEach(s=>s.items.forEach(i=>{t+=ITEMS[i].target;d+=Math.min(cnt(k,s.id,i),ITEMS[i].target)}));return d/t};
+
+const h=new Date().getHours();
+let slot=h<12?"subuh":h<19?"asar":"isyak";
+const sel={subuh:0,asar:0,isyak:0};
+
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+
+function tap(){
+  const s=SLOTS.find(x=>x.id===slot),item=s.items[sel[slot]],k=today(),d=dayData(k),key=slot+":"+item,T=ITEMS[item].target;
+  const c=d[key]||0;
+  if(item==="mulk"){d[key]=c>=1?0:1;save();vib(d[key]?[30,40,30]:10);if(d[key])toast("Masha'Allah, Al-Mulk done");render();return}
+  if(c>=T)return;
+  d[key]=c+1;save();
+  if(d[key]>=T){
+    vib([60,50,60]);
+    const nxt=s.items.findIndex((i,ix)=>ix>sel[slot]&&cnt(k,slot,i)<ITEMS[i].target);
+    if(slotDone(k,slot))toast("Alhamdulillah, "+s.name+" complete");
+    else if(nxt>=0){sel[slot]=nxt;toast("Done. Next zikir")}
+  }else vib(c%33===32?[40,30,40]:8);
+  render();
+}
+function minus(){const k=today(),d=dayData(k),s=SLOTS.find(x=>x.id===slot),i=s.items[sel[slot]],key=slot+":"+i;if(d[key]>0){d[key]--;save();render()}}
+function resetItem(){const k=today(),d=dayData(k),s=SLOTS.find(x=>x.id===slot),i=s.items[sel[slot]];if(confirm("Reset this counter to 0?")){d[slot+":"+i]=0;save();render()}}
+
+function streak(){
+  let n=0,d=new Date();
+  if(dayTotals(dkey(d))<1)d.setDate(d.getDate()-1);
+  while(dayTotals(dkey(d))>=1){n++;d.setDate(d.getDate()-1)}
+  return n;
+}
+
+function render(){
+  renderPrayer();
+  const k=today(),now=new Date();
+  document.getElementById("date").textContent=now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("streak").textContent="🔥 "+streak()+" day"+(streak()===1?"":"s");
+  // week strip
+  let w="";
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const kk=dkey(d),p=dayTotals(kk);
+    w+=`<div class="day ${i===0?"today":""} ${p>=1?"full":""}">${d.toLocaleDateString("en-GB",{weekday:"narrow"})}<i><b style="width:${Math.round(p*100)}%"></b></i></div>`}
+  document.getElementById("week").innerHTML=w;
+  // tabs
+  document.getElementById("tabs").innerHTML=SLOTS.map(s=>`<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.name}<small>${slotDone(k,s.id)?"✓ done":s.sub+(ptime(s.id)?" · "+ptime(s.id):"")}</small></button>`).join("");
+  // main
+  const s=SLOTS.find(x=>x.id===slot),itemId=s.items[sel[slot]],it=ITEMS[itemId],c=cnt(k,slot,itemId),T=it.target;
+  let html="";
+  if(s.items.length>1){
+    html+=`<div class="chips">`+s.items.map((i,ix)=>`<button class="chip ${ix===sel[slot]?"sel":""} ${cnt(k,slot,i)>=ITEMS[i].target?"done":""}" onclick="sel['${slot}']=${ix};render()"><span class="a">${ITEMS[i].short}</span>${cnt(k,slot,i)}/${ITEMS[i].target}</button>`).join("")+`</div>`;
+  }
+  if(itemId==="mulk"){
+    html+=`<div class="hero" onclick="tap()"><p class="ar big">${it.ar}</p><p class="ms">${it.ms}</p>
+    <div class="mulk-btn ${c?"on":""}">${c?"✓":"۝"}</div>
+    <div class="${c?"complete":"hint"}">${c?"Completed tonight":"Tap after you finish reciting"}</div></div>`;
+  }else{
+    const R=88,C=2*Math.PI*R,off=C*(1-Math.min(c/T,1));
+    html+=`<div class="hero" onclick="tap()"><p class="ar">${it.ar}</p><p class="ms">${it.ms}</p>
+    <div class="ring"><svg width="190" height="190" viewBox="0 0 190 190"><circle cx="95" cy="95" r="${R}" fill="none" stroke="#2a6a52" stroke-width="10"/><circle cx="95" cy="95" r="${R}" fill="none" stroke="${c>=T?"#7bd88f":"#e3c16f"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .15s"/></svg>
+    <div class="num"><b>${c}</b><span>of ${T}</span></div></div>
+    <div class="${c>=T?"complete":"hint"}">${c>=T?"Completed ✓":"Tap anywhere to count"}</div></div>
+    <div class="actions"><button class="btn" onclick="minus()">− Undo one</button><button class="btn" onclick="resetItem()">Reset</button></div>`;
+  }
+  document.getElementById("main").innerHTML=html;
+}
+/* ---------- Prayer times + reminders ---------- */
+const PK="zikir.prayer.v1";
+const FALLBACK={lat:1.5373,lng:104.2297}; // Bandar Penawar, Johor
+const OFFSETS=[0,10,20,30];
+let pr={lat:null,lng:null,months:{},notify:false,offset:10,fired:{}};
+try{Object.assign(pr,JSON.parse(localStorage.getItem(PK))||{})}catch(e){}
+const savePr=()=>{try{localStorage.setItem(PK,JSON.stringify(pr))}catch(e){}};
+const PNAMES={subuh:"Subuh",asar:"Asar",isyak:"Isyak"};
+let prayerStatus="loading";
+
+function ymKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function dayTimes(d){ // -> {subuh:Date, asar:Date, isyak:Date} or null
+  const m=pr.months[ymKey(d)];const r=m&&m[d.getDate()-1];if(!r)return null;
+  const mk=s=>{const[h,mi]=s.split(":").map(Number);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi)};
+  return {subuh:mk(r.f),asar:mk(r.a),isyak:mk(r.i)};
+}
+function fmt(t){return t.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function ptime(id){const t=dayTimes(new Date());return t?fmt(t[id]):null}
+
+async function loadMonth(d){
+  const ym=ymKey(d);if(pr.months[ym])return true;
+  const lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
+  try{
+    // method 17 = JAKIM (Malaysia)
+    const r=await fetch(`https://api.aladhan.com/v1/calendar/${d.getFullYear()}/${d.getMonth()+1}?latitude=${lat}&longitude=${lng}&method=17`);
+    const j=await r.json();
+    pr.months[ym]=j.data.map(x=>({f:x.timings.Fajr.slice(0,5),a:x.timings.Asr.slice(0,5),i:x.timings.Isha.slice(0,5)}));
+    // keep only 2 most recent months cached
+    Object.keys(pr.months).sort().slice(0,-2).forEach(k=>delete pr.months[k]);
+    savePr();return true;
+  }catch(e){return false}
+}
+async function initPrayer(){
+  const now=new Date(),nxt=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+  const ok=await loadMonth(now);await loadMonth(nxt);
+  prayerStatus=ok||dayTimes(now)?"ok":"offline";
+  render();
+}
+function getLoc(){
+  if(!navigator.geolocation){toast("Location not supported");initPrayer();return}
+  toast("Getting your location…");
+  navigator.geolocation.getCurrentPosition(p=>{
+    pr.lat=+p.coords.latitude.toFixed(4);pr.lng=+p.coords.longitude.toFixed(4);pr.months={};savePr();
+    toast("Location updated");initPrayer();
+  },()=>{toast("Location denied – using Bandar Penawar");initPrayer()},{timeout:10000,maximumAge:3600000});
+}
+function nextEvent(){
+  const now=new Date(),out=[];
+  for(let i=0;i<2;i++){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i),t=dayTimes(d);
+    if(t)["subuh","asar","isyak"].forEach(id=>out.push({id,t:t[id]}))}
+  return out.find(e=>e.t>now);
+}
+function renderPrayer(){
+  const el=document.getElementById("prayer");if(!el)return;
+  const ev=nextEvent();let main,sub;
+  if(ev){const mins=Math.max(0,Math.round((ev.t-new Date())/60000)),hh=Math.floor(mins/60),mm=mins%60;
+    main=`${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m · zikir reminder +${pr.offset}m`}
+  else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM method"}
+  el.innerHTML=`<div class="pinfo"><b>${main}</b><span>${sub}</span></div>
+  <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
+  <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
+  <button onclick="getLoc()">📍</button>`;
+}
+function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
+async function toggleNotify(){
+  if(pr.notify){pr.notify=false;savePr();render();toast("Reminders off");return}
+  if(!("Notification" in window)){toast("Notifications not supported here");return}
+  let p=Notification.permission;if(p!=="granted")p=await Notification.requestPermission();
+  if(p==="granted"){pr.notify=true;savePr();render();toast("Reminders on");checkReminders()}
+  else toast("Notification permission denied");
+}
+async function notify(title,body,tag){
+  try{const reg=await navigator.serviceWorker.ready;await reg.showNotification(title,{body,tag,icon:"icon-192.png",badge:"icon-192.png",vibrate:[100,60,100]});}
+  catch(e){try{new Notification(title,{body,tag,icon:"icon-192.png"})}catch(_){}}
+}
+function checkReminders(){
+  if(!pr.notify||Notification.permission!=="granted")return;
+  const now=new Date(),t=dayTimes(now);if(!t)return;
+  ["subuh","asar","isyak"].forEach(id=>{
+    const at=new Date(t[id].getTime()+pr.offset*60000),k=today()+id;
+    if(now>=at&&now<new Date(at.getTime()+30*60000)&&!pr.fired[k]&&!slotDone(today(),id)){
+      pr.fired[k]=1;Object.keys(pr.fired).slice(0,-12).forEach(x=>delete pr.fired[x]);savePr();
+      notify(id==="isyak"?"Time for Surah Al-Mulk":`Time for ${PNAMES[id]} zikir`,id==="isyak"?"Recite once after Isha prayer":"Subhanallah, Alhamdulillah, Istighfar, Selawat – 100x each",k);
+    }
+  });
+}
+setInterval(()=>{renderPrayer();checkReminders()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders()}});
+if(pr.lat==null&&"geolocation" in navigator)getLoc();else initPrayer();
+
+render();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+</script>
+</body>
+</html>

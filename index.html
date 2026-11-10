@@ -215,7 +215,7 @@ async function fetchJakim(d){
   const res=await fetch(url);if(!res.ok)throw new Error("http "+res.status);
   const j=await res.json();
   const arr=j.prayers||j.prayerTime||j.data;if(!Array.isArray(arr)||arr.length<28)throw new Error("shape");
-  if(!pr.zone&&(j.month&&j.month!==mo||j.year&&j.year!==y))throw new Error("month");
+  if(arr.length!==new Date(y,mo,0).getDate())throw new Error("days "+arr.length);
   const days=[];
   arr.forEach((x,i)=>{const dn=(typeof x.day==="number"?x.day:i+1)-1;
     days[dn]={h:x.hijri,f:toMs(x.fajr,y,mo,dn+1),s:toMs(x.syuruk,y,mo,dn+1),d:toMs(x.dhuhr,y,mo,dn+1),a:toMs(x.asr,y,mo,dn+1),m:toMs(x.maghrib,y,mo,dn+1),i:toMs(x.isha,y,mo,dn+1)}});
@@ -240,9 +240,10 @@ async function fetchAladhan(d){ // fallback; Hijri date here is approximate, not
     return {h:`${hj.year}-${p2(hj.month.number)}-${p2(hj.day)}`,f:g("Fajr"),s:g("Sunrise"),d:g("Dhuhr"),a:g("Asr"),m:g("Maghrib"),i:g("Isha")}})};
 }
 async function loadMonth(d){
-  const ym=ymKey(d);if(pr.m3[ym])return true;
-  let data=null;
-  try{data=await fetchJakim(d)}catch(e){try{data=await fetchEsolat(d)}catch(e2){try{data=await fetchAladhan(d)}catch(_){}}}
+  const ym=ymKey(d);if(pr.m3[ym]&&pr.m3[ym].src==="jakim")return true;
+  let data=null,errs=[];
+  try{data=await fetchJakim(d)}catch(e){errs.push("A:"+e.message);try{data=await fetchEsolat(d)}catch(e2){errs.push("B:"+e2.message);if(pr.m3[ym])data=pr.m3[ym];else try{data=await fetchAladhan(d)}catch(_){}}}
+  pr.err=data&&data.src==="jakim"?"":errs.join(" ");
   if(!data)return false;
   pr.m3[ym]=data;Object.keys(pr.m3).sort().slice(0,-2).forEach(k=>delete pr.m3[k]);delete pr.months;savePr();return true;
 }
@@ -271,7 +272,7 @@ function renderPrayer(){
   const el=document.getElementById("prayer");if(!el)return;
   const ev=nextEvent(),t=dayTimes(new Date()),now=new Date();let main,sub;
   if(ev){const mins=Math.max(0,Math.round((ev.t-now)/60000)),hh=Math.floor(mins/60),mm=mins%60;
-    main=`Next: ${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`+(t?` · ${pr.zone?pr.zone+" ":""}${t.src==="jakim"?"JAKIM":"approx."}`:"")}
+    main=`Next: ${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`+(t?` · ${pr.zone?pr.zone+" ":""}${t.src==="jakim"?"JAKIM":"approx."}${t.src!=="jakim"&&pr.err?" ("+pr.err+")":""}`:"")}
   else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM"}
   const strip=t?`<div class="pstrip">`+ORDER.map((id,ix)=>{const f=fmt(t[id]).split(" ");return `<div class="pc ${ix<3?"w4":""} ${ev&&ev.id===id?"next":t[id]<now?"passed":""}">${PNAMES[id]}<b>${f[0]}<i>${f[1]||""}</i></b></div>`}).join("")+`</div>`:"";
   el.innerHTML=`<div class="prow"><div class="pinfo"><b>${main}</b><span>${sub}</span></div>

@@ -201,7 +201,7 @@ function dayTimes(d){
   const m=pr.m3&&pr.m3[ymKey(d)];const r=m&&m.days&&m.days[d.getDate()-1];if(!r)return null;
   return {subuh:new Date(r.f),syuruk:new Date(r.s),dhuha:new Date(r.s+28*60000),zohor:new Date(r.d),asar:new Date(r.a),maghrib:new Date(r.m),isyak:new Date(r.i),hijri:r.h,src:m.src};
 }
-function fmt(t){return t.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function fmt(t){return String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0")}
 function ptime(id){const t=dayTimes(new Date());return t?fmt(t[id]):null}
 
 // value may be epoch seconds/ms (number) or "HH:MM[:SS]" (string)

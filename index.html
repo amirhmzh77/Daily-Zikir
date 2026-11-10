@@ -60,6 +60,13 @@ main{display:flex;flex-direction:column}
 .prayer .pinfo span{font-size:11px;color:var(--muted)}
 .prayer button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;height:34px;min-width:34px;padding:0 8px;font-size:13px}
 .prayer button.on{border-color:var(--gold);color:var(--gold)}
+.times{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 14px}
+.times .hd{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:2px}
+.times .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1d5a46;font-size:15px;font-variant-numeric:tabular-nums}
+.times .row:last-child{border-bottom:0}
+.times .row.next{color:var(--gold);font-weight:700}
+.times .row.passed{color:var(--muted)}
+.hj{color:var(--gold);font-size:12px;margin-top:1px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#0b2d22;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
 .toast.show{opacity:1}
 </style>
@@ -73,6 +80,7 @@ main{display:flex;flex-direction:column}
 <div class="prayer" id="prayer"></div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
+<div class="times" id="times"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -132,7 +140,7 @@ function streak(){
 function render(){
   renderPrayer();
   const k=today(),now=new Date();
-  document.getElementById("date").textContent=now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+  const _t=dayTimes(now);document.getElementById("date").innerHTML=now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})+(_t&&_t.hijri?`<div class="hj">${hijriStr(_t.hijri)}${_t.src==="aladhan"?" (approx.)":""}</div>`:"");
   document.getElementById("streak").textContent="🔥 "+streak()+" day"+(streak()===1?"":"s");
   // week strip
   let w="";
@@ -161,41 +169,62 @@ function render(){
   }
   document.getElementById("main").innerHTML=html;
 }
-/* ---------- Prayer times + reminders ---------- */
+/* ---------- Prayer times + reminders (JAKIM via waktusolat.app) ---------- */
 const PK="zikir.prayer.v1";
 const FALLBACK={lat:1.5373,lng:104.2297}; // Bandar Penawar, Johor
 const OFFSETS=[0,10,20,30];
-let pr={lat:null,lng:null,months:{},notify:false,offset:10,fired:{}};
+let pr={lat:null,lng:null,zone:null,m3:{},notify:false,offset:10,fired:{}};
 try{Object.assign(pr,JSON.parse(localStorage.getItem(PK))||{})}catch(e){}
 const savePr=()=>{try{localStorage.setItem(PK,JSON.stringify(pr))}catch(e){}};
-const PNAMES={subuh:"Subuh",asar:"Asar",isyak:"Isyak"};
+const PNAMES={maghrib:"Maghrib",isyak:"Isyak",subuh:"Subuh",syuruk:"Syuruk",dhuha:"Dhuha",zohor:"Zohor",asar:"Asar"};
+const ORDER=["maghrib","isyak","subuh","syuruk","dhuha","zohor","asar"];
+const HMONTHS=["Muharram","Safar","Rabiulawal","Rabiulakhir","Jamadilawal","Jamadilakhir","Rejab","Syaaban","Ramadan","Syawal","Zulkaedah","Zulhijjah"];
 let prayerStatus="loading";
 
+function hijriStr(h){const[y,m,d]=h.split("-").map(Number);return `${d} ${HMONTHS[m-1]||m} ${y}H`}
 function ymKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
-function dayTimes(d){ // -> {subuh:Date, asar:Date, isyak:Date} or null
-  const m=pr.months[ymKey(d)];const r=m&&m[d.getDate()-1];if(!r)return null;
-  const mk=s=>{const[h,mi]=s.split(":").map(Number);return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,mi)};
-  return {subuh:mk(r.f),asar:mk(r.a),isyak:mk(r.i)};
+function dayTimes(d){
+  const m=pr.m3&&pr.m3[ymKey(d)];const r=m&&m.days&&m.days[d.getDate()-1];if(!r)return null;
+  return {subuh:new Date(r.f),syuruk:new Date(r.s),dhuha:new Date(r.s+28*60000),zohor:new Date(r.d),asar:new Date(r.a),maghrib:new Date(r.m),isyak:new Date(r.i),hijri:r.h,src:m.src};
 }
 function fmt(t){return t.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
 function ptime(id){const t=dayTimes(new Date());return t?fmt(t[id]):null}
 
+// value may be epoch seconds/ms (number) or "HH:MM[:SS]" (string)
+function toMs(v,y,mo,day){
+  if(typeof v==="number")return v<1e12?v*1000:v;
+  const[h,mi]=String(v).split(":").map(Number);return new Date(y,mo-1,day,h,mi).getTime();
+}
+async function fetchJakim(d){
+  const y=d.getFullYear(),mo=d.getMonth()+1,lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
+  const url=pr.zone?`https://api.waktusolat.app/v2/solat/${pr.zone}?year=${y}&month=${mo}`:`https://api.waktusolat.app/v2/solat/gps/${lat}/${lng}`;
+  const res=await fetch(url);if(!res.ok)throw new Error("http "+res.status);
+  const j=await res.json();
+  const arr=j.prayers||j.prayerTime||j.data;if(!Array.isArray(arr)||arr.length<28)throw new Error("shape");
+  if(!pr.zone&&(j.month&&j.month!==mo||j.year&&j.year!==y))throw new Error("month");
+  const days=[];
+  arr.forEach((x,i)=>{const dn=(typeof x.day==="number"?x.day:i+1)-1;
+    days[dn]={h:x.hijri,f:toMs(x.fajr,y,mo,dn+1),s:toMs(x.syuruk,y,mo,dn+1),d:toMs(x.dhuhr,y,mo,dn+1),a:toMs(x.asr,y,mo,dn+1),m:toMs(x.maghrib,y,mo,dn+1),i:toMs(x.isha,y,mo,dn+1)}});
+  if(j.zone)pr.zone=j.zone;
+  return {src:"jakim",days};
+}
+async function fetchAladhan(d){ // fallback; Hijri date here is approximate, not JAKIM
+  const y=d.getFullYear(),mo=d.getMonth()+1,lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
+  const res=await fetch(`https://api.aladhan.com/v1/calendar/${y}/${mo}?latitude=${lat}&longitude=${lng}&method=17`);
+  const j=await res.json();const p2=n=>String(n).padStart(2,"0");
+  return {src:"aladhan",days:j.data.map((x,i)=>{const t=x.timings,g=k=>toMs(t[k].slice(0,5),y,mo,i+1),hj=x.date.hijri;
+    return {h:`${hj.year}-${p2(hj.month.number)}-${p2(hj.day)}`,f:g("Fajr"),s:g("Sunrise"),d:g("Dhuhr"),a:g("Asr"),m:g("Maghrib"),i:g("Isha")}})};
+}
 async function loadMonth(d){
-  const ym=ymKey(d);if(pr.months[ym])return true;
-  const lat=pr.lat??FALLBACK.lat,lng=pr.lng??FALLBACK.lng;
-  try{
-    // method 17 = JAKIM (Malaysia)
-    const r=await fetch(`https://api.aladhan.com/v1/calendar/${d.getFullYear()}/${d.getMonth()+1}?latitude=${lat}&longitude=${lng}&method=17`);
-    const j=await r.json();
-    pr.months[ym]=j.data.map(x=>({f:x.timings.Fajr.slice(0,5),a:x.timings.Asr.slice(0,5),i:x.timings.Isha.slice(0,5)}));
-    // keep only 2 most recent months cached
-    Object.keys(pr.months).sort().slice(0,-2).forEach(k=>delete pr.months[k]);
-    savePr();return true;
-  }catch(e){return false}
+  const ym=ymKey(d);if(pr.m3[ym])return true;
+  let data=null;
+  try{data=await fetchJakim(d)}catch(e){try{data=await fetchAladhan(d)}catch(_){}}
+  if(!data)return false;
+  pr.m3[ym]=data;Object.keys(pr.m3).sort().slice(0,-2).forEach(k=>delete pr.m3[k]);delete pr.months;savePr();return true;
 }
 async function initPrayer(){
   const now=new Date(),nxt=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
-  const ok=await loadMonth(now);await loadMonth(nxt);
+  const ok=await loadMonth(now);if(ymKey(nxt)!==ymKey(now))await loadMonth(nxt);
   prayerStatus=ok||dayTimes(now)?"ok":"offline";
   render();
 }
@@ -203,26 +232,37 @@ function getLoc(){
   if(!navigator.geolocation){toast("Location not supported");initPrayer();return}
   toast("Getting your location…");
   navigator.geolocation.getCurrentPosition(p=>{
-    pr.lat=+p.coords.latitude.toFixed(4);pr.lng=+p.coords.longitude.toFixed(4);pr.months={};savePr();
+    pr.lat=+p.coords.latitude.toFixed(4);pr.lng=+p.coords.longitude.toFixed(4);pr.m3={};pr.zone=null;savePr();
     toast("Location updated");initPrayer();
   },()=>{toast("Location denied – using Bandar Penawar");initPrayer()},{timeout:10000,maximumAge:3600000});
 }
-function nextEvent(){
+function allEvents(){
   const now=new Date(),out=[];
   for(let i=0;i<2;i++){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i),t=dayTimes(d);
-    if(t)["subuh","asar","isyak"].forEach(id=>out.push({id,t:t[id]}))}
-  return out.find(e=>e.t>now);
+    if(t)ORDER.forEach(id=>out.push({id,t:t[id]}))}
+  return out.sort((a,b)=>a.t-b.t);
+}
+function nextEvent(){const now=new Date();return allEvents().find(e=>e.t>now)}
+function renderTimes(){
+  const el=document.getElementById("times");if(!el)return;
+  const t=dayTimes(new Date());
+  if(!t){el.style.display="none";return}
+  el.style.display="";
+  const ev=nextEvent(),now=new Date();
+  el.innerHTML=`<div class="hd"><span>Waktu Solat</span><span>${pr.zone?pr.zone+" · ":""}${t.src==="jakim"?"JAKIM":"approx."}</span></div>`+
+    ORDER.map(id=>`<div class="row ${ev&&ev.id===id?"next":t[id]<now?"passed":""}"><span>${PNAMES[id]}</span><span>${fmt(t[id])}</span></div>`).join("");
 }
 function renderPrayer(){
   const el=document.getElementById("prayer");if(!el)return;
   const ev=nextEvent();let main,sub;
   if(ev){const mins=Math.max(0,Math.round((ev.t-new Date())/60000)),hh=Math.floor(mins/60),mm=mins%60;
     main=`${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`}
-  else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM method"}
+  else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM"}
   el.innerHTML=`<div class="pinfo"><b>${main}</b><span>${sub}</span></div>
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
   <button onclick="getLoc()">📍</button>`;
+  renderTimes();
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
 async function toggleNotify(){

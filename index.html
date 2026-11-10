@@ -205,12 +205,12 @@ function render(){
   renderPrayer();
   const k=today(),now=new Date();
   const _t=dayTimes(now);document.getElementById("date").innerHTML=`${DAYS_MS[now.getDay()]}, ${now.getDate()} ${MONTHS_MS[now.getMonth()]} ${now.getFullYear()}`+(_t&&_t.hijri?`<div class="hj">${hijriStr(_t.hijri)}${_t.src==="aladhan"?" (approx.)":""}</div>`:"");
-  document.getElementById("streak").textContent="🔥 "+streak()+" day"+(streak()===1?"":"s");
+  document.getElementById("streak").textContent="💎 "+streak()+" day"+(streak()===1?"":"s");
   // week strip
   let w="";
   const wk0=new Date(now.getFullYear(),now.getMonth(),now.getDate()-now.getDay()); // week starts Ahad
   for(let i=0;i<7;i++){const d=new Date(wk0.getFullYear(),wk0.getMonth(),wk0.getDate()+i),kk=dkey(d),p=dayTotals(kk),isToday=kk===k,future=kk>k;
-    w+=`<div class="day ${isToday?"today":""} ${p>=1?"full":""} ${future?"future":""}">${DAYS_MS[i][0]}<i><b style="width:${Math.round(p*100)}%"></b></i></div>`}
+    w+=`<div class="day ${isToday?"today":""} ${p>=1?"full":""} ${future?"future":""}">${DAYS_MS[i][0]}</div>`}
   document.getElementById("week").innerHTML=w;
   // tabs
   document.getElementById("tabs").innerHTML=SLOTS.map(s=>{const dn=s.items.filter(i=>cnt(k,s.id,i)>=ITEMS[i].target).length;return `<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.tab}<small>${slotDone(k,s.id)?"✓ done":dn+"/"+s.items.length+" done"}</small></button>`}).join("");

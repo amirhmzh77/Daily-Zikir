@@ -96,6 +96,11 @@ input{-webkit-user-select:text;user-select:text}
 .presets button{flex:1;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:14px}
 .srow{display:flex;gap:10px}
 .btn.go{background:var(--gold);color:#fff;border-color:var(--gold);font-weight:700}
+.azanrow{display:flex;gap:6px;align-items:center;margin:-2px 0 4px}
+.azanrow button,.azanrow select{height:36px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:0 10px;font-size:13px;font-family:inherit}
+.azanrow select{flex:1;min-width:0}
+.azanrow button.on{border-color:var(--gold);color:var(--gold);font-weight:600}
+.aznote{font-size:11px;color:var(--muted);margin:0 2px 10px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
 .toast.show{opacity:1}
 </style>
@@ -107,6 +112,12 @@ input{-webkit-user-select:text;user-select:text}
 </header>
 <div class="week" id="week"></div>
 <div class="prayer" id="prayer"></div>
+<div class="azanrow">
+  <button id="azTog" onclick="toggleAzan()">🔊 Azan: Off</button>
+  <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
+  <button id="azPlay" onclick="testAzan()">▶ Test</button>
+</div>
+<div class="aznote">Azan plays at Zohor, Asar, Maghrib &amp; Isyak while the app is open.</div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
 <div class="sheetbg" id="sheet" onclick="if(event.target===this)closeAdd()">
@@ -238,7 +249,7 @@ function render(){
 const PK="zikir.prayer.v1";
 const FALLBACK={lat:1.5373,lng:104.2297}; // Bandar Penawar, Johor
 const OFFSETS=[0,10,20,30];
-let pr={lat:null,lng:null,zone:null,m3:{},notify:false,offset:10,fired:{}};
+let pr={lat:null,lng:null,zone:null,m3:{},notify:false,offset:10,fired:{},azanOn:false,azan:"makkah"};
 try{Object.assign(pr,JSON.parse(localStorage.getItem(PK))||{})}catch(e){}
 const savePr=()=>{try{localStorage.setItem(PK,JSON.stringify(pr))}catch(e){}};
 const PNAMES={maghrib:"Maghrib",isyak:"Isyak",subuh:"Subuh",syuruk:"Syuruk",dhuha:"Dhuha",zohor:"Zohor",asar:"Asar"};
@@ -354,8 +365,41 @@ function checkReminders(){
     }
   });
 }
-setInterval(()=>{renderPrayer();checkReminders()},20000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders()}});
+/* ---------- Azan (plays in-app at Zohor, Asar, Maghrib, Isyak) ---------- */
+const AZ={makkah:{f:"azan-makkah.mp3"},a2:{f:"azan-2.mp3"},a3:{f:"azan-3.mp3"}};
+const AZAN_IDS=["zohor","asar","maghrib","isyak"];
+const azAudio=new Audio();azAudio.preload="auto";
+["play","pause","ended"].forEach(ev=>azAudio.addEventListener(ev,()=>updAzan()));
+let azUnlocked=false;
+function unlockAudio(){ // iOS needs one user gesture before audio can start by itself later
+  if(azUnlocked)return;azUnlocked=true;
+  azAudio.src=AZ[pr.azan].f;azAudio.muted=true;
+  azAudio.play().then(()=>{azAudio.pause();azAudio.currentTime=0;azAudio.muted=false}).catch(()=>{azAudio.muted=false;azUnlocked=false});
+}
+["touchend","click"].forEach(e=>document.addEventListener(e,unlockAudio,{passive:true}));
+function playAzan(name){
+  azAudio.muted=false;azAudio.src=AZ[pr.azan].f;azAudio.currentTime=0;
+  azAudio.play().then(()=>{if(name)toast("Azan "+name)}).catch(()=>toast("Tap the screen once to allow azan sound"));
+}
+function stopAzan(){azAudio.pause();azAudio.currentTime=0}
+function testAzan(){azUnlocked=true;if(!azAudio.paused&&!azAudio.muted){stopAzan();return}playAzan()}
+function toggleAzan(){pr.azanOn=!pr.azanOn;savePr();updAzan();toast(pr.azanOn?"Azan on – keep the app open":"Azan off");if(pr.azanOn)unlockAudio()}
+function setAz(v){pr.azan=v;savePr();stopAzan();azAudio.src=AZ[v].f}
+function updAzan(){
+  const tg=document.getElementById("azTog"),pl=document.getElementById("azPlay"),sel=document.getElementById("azSel");if(!tg)return;
+  tg.textContent="🔊 Azan: "+(pr.azanOn?"On":"Off");tg.classList.toggle("on",!!pr.azanOn);
+  pl.textContent=(!azAudio.paused&&!azAudio.muted)?"⏹ Stop":"▶ Test";sel.value=pr.azan;
+}
+function checkAzan(){
+  if(!pr.azanOn)return;const now=new Date(),t=dayTimes(now);if(!t)return;
+  AZAN_IDS.forEach(id=>{const at=t[id],k=today()+"az"+id;
+    if(now>=at&&now<new Date(at.getTime()+3*60000)&&!pr.fired[k]){
+      pr.fired[k]=1;Object.keys(pr.fired).slice(0,-24).forEach(x=>delete pr.fired[x]);savePr();playAzan(PNAMES[id]);
+    }});
+}
+updAzan();
+setInterval(()=>{renderPrayer();checkReminders();checkAzan()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders();checkAzan()}});
 if(pr.lat==null&&"geolocation" in navigator)getLoc();else initPrayer();
 
 render();

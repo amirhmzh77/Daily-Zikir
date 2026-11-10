@@ -51,7 +51,7 @@ main{display:flex;flex-direction:column}
 .chip{flex:1;padding:8px 6px;border-radius:12px;border:1px solid var(--line);font-size:12px;text-align:center;color:var(--muted);background:transparent}
 .chip.sel{border-color:var(--gold);color:var(--text);background:var(--card)}
 .chip.done{color:var(--ok)}
-.chip .a{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;font-size:15px;line-height:1.6;display:block;direction:rtl;white-space:nowrap;overflow:hidden}
+.chip .a{font-size:14px;font-weight:600;line-height:1.5;display:block;white-space:nowrap;overflow:hidden;color:inherit}
 .mulk-btn{width:150px;height:150px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:44px;margin:10px 0;background:transparent;color:var(--gold)}
 .mulk-btn.on{background:var(--ok);border-color:var(--ok);color:#0b2d22}
 .prayer{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 10px;margin-bottom:10px}
@@ -77,10 +77,10 @@ main{display:flex;flex-direction:column}
 
 <script>
 const ITEMS = {
-  z1:{ar:"سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ",ms:"Glory be to Allah, all praise is for Allah, there is no god but Allah, Allah is the Greatest",short:"سبحان الله…",target:100},
-  z2:{ar:"أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ",ms:"I seek forgiveness from Allah the Almighty",short:"أستغفر الله",target:100},
-  z3:{ar:"اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ، اللَّهُمَّ صَلِّ عَلَيْهِ وَسَلِّمْ",ms:"O Allah, send blessings upon Muhammad; O Allah, send blessings and peace upon him",short:"اللهم صل…",target:100},
-  mulk:{ar:"سُورَةُ المُلْك",ms:"Surah Al-Mulk, recite once",short:"الملك",target:1}
+  z1:{ar:"سُبْحَانَ اللَّهِ وَالْحَمْدُ لِلَّهِ وَلَا إِلَهَ إِلَّا اللَّهُ وَاللَّهُ أَكْبَرُ",ms:"Glory be to Allah, all praise is for Allah, there is no god but Allah, Allah is the Greatest",short:"Tasbih",target:100},
+  z2:{ar:"أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ",ms:"I seek forgiveness from Allah the Almighty",short:"Istighfar",target:100},
+  z3:{ar:"اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ، اللَّهُمَّ صَلِّ عَلَيْهِ وَسَلِّمْ",ms:"O Allah, send blessings upon Muhammad; O Allah, send blessings and peace upon him",short:"Selawat",target:100},
+  mulk:{ar:"سُورَةُ المُلْك",ms:"Surah Al-Mulk, recite once",short:"Al-Mulk",target:1}
 };
 const SLOTS = [
   {id:"subuh",name:"Subuh",sub:"After Fajr",items:["z1","z2","z3"]},

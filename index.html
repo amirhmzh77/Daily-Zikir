@@ -91,6 +91,7 @@ main{display:flex;flex-direction:column}
 </header>
 <div class="week" id="week"></div>
 <div class="prayer" id="prayer"></div>
+<div class="tabs" id="tabs"></div>
 <main id="main"></main>
 <div class="toast" id="toast"></div>
 
@@ -102,9 +103,9 @@ const ITEMS = {
   mulk:{ar:"سُورَةُ المُلْك",ms:"Surah Al-Mulk, recite once",short:"Al-Mulk",target:1}
 };
 const SLOTS = [
-  {id:"subuh",name:"Subuh",sub:"After Fajr",items:["z1","z2","z3"]},
-  {id:"asar",name:"Asar",sub:"After Asr",items:["z1","z2","z3"]},
-  {id:"isyak",name:"Isyak",sub:"After Isha",items:["mulk"]}
+  {id:"subuh",name:"Subuh",tab:"After Subuh",sub:"After Fajr",items:["z1","z2","z3"]},
+  {id:"asar",name:"Asar",tab:"After Asar",sub:"After Asr",items:["z1","z2","z3"]},
+  {id:"isyak",name:"Isyak",tab:"After Isyak",sub:"After Isha",items:["mulk"]}
 ];
 const KEY="zikir.v1";
 let store={days:{}};
@@ -158,9 +159,11 @@ function render(){
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const kk=dkey(d),p=dayTotals(kk);
     w+=`<div class="day ${i===0?"today":""} ${p>=1?"full":""}">${d.toLocaleDateString("en-GB",{weekday:"narrow"})}<i><b style="width:${Math.round(p*100)}%"></b></i></div>`}
   document.getElementById("week").innerHTML=w;
+  // tabs
+  document.getElementById("tabs").innerHTML=SLOTS.map(s=>{const dn=s.items.filter(i=>cnt(k,s.id,i)>=ITEMS[i].target).length;return `<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.tab}<small>${slotDone(k,s.id)?"✓ done":dn+"/"+s.items.length+" done"}</small></button>`}).join("");
   // main
   const s=SLOTS.find(x=>x.id===slot),itemId=s.items[sel[slot]],it=ITEMS[itemId],c=cnt(k,slot,itemId),T=it.target;
-  let html=`<div class="slothd">${s.name} <span>· ${s.sub}</span>${slotDone(k,slot)?" <em>✓ done</em>":""}</div>`;
+  let html="";
   if(s.items.length>1){
     html+=`<div class="chips">`+s.items.map((i,ix)=>`<button class="chip ${ix===sel[slot]?"sel":""} ${cnt(k,slot,i)>=ITEMS[i].target?"done":""}" onclick="sel['${slot}']=${ix};render()"><span class="a">${ITEMS[i].short}</span>${cnt(k,slot,i)}/${ITEMS[i].target}</button>`).join("")+`</div>`;
   }
@@ -258,7 +261,7 @@ function renderPrayer(){
   if(ev){const mins=Math.max(0,Math.round((ev.t-now)/60000)),hh=Math.floor(mins/60),mm=mins%60;
     main=`Next: ${PNAMES[ev.id]} ${fmt(ev.t)}`;sub=`in ${hh?hh+"h ":""}${mm}m`+(t?` · ${pr.zone?pr.zone+" ":""}${t.src==="jakim"?"JAKIM":"approx."}`:"")}
   else{main=prayerStatus==="offline"?"Prayer times unavailable":"Loading prayer times…";sub=prayerStatus==="offline"?"Connect once to download this month":"JAKIM"}
-  const strip=t?`<div class="pstrip">`+ORDER.map(id=>{const f=fmt(t[id]).split(" ");const z=SLOTS.some(x=>x.id===id);return `<div class="pc ${ev&&ev.id===id?"next":t[id]<now?"passed":""} ${z?"tap":""} ${z&&id===slot?"sel":""}" ${z?`onclick="slot='${id}';render()"`:""}>${PNAMES[id]}<b>${f[0]}</b><i>${f[1]||""}</i></div>`}).join("")+`</div>`:"";
+  const strip=t?`<div class="pstrip">`+ORDER.map(id=>{const f=fmt(t[id]).split(" ");return `<div class="pc ${ev&&ev.id===id?"next":t[id]<now?"passed":""}">${PNAMES[id]}<b>${f[0]}</b><i>${f[1]||""}</i></div>`}).join("")+`</div>`:"";
   el.innerHTML=`<div class="prow"><div class="pinfo"><b>${main}</b><span>${sub}</span></div>
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>

@@ -117,7 +117,7 @@ input{-webkit-user-select:text;user-select:text}
   <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
   <button id="azPlay" onclick="testAzan()">▶ Test</button>
 </div>
-<div class="aznote">Azan plays at Zohor, Asar, Maghrib &amp; Isyak while the app is open.</div>
+<div class="aznote">Azan plays at Subuh, Zohor, Asar, Maghrib &amp; Isyak while the app is open. Subuh uses its own Fajr azan.</div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
 <div class="sheetbg" id="sheet" onclick="if(event.target===this)closeAdd()">
@@ -367,7 +367,8 @@ function checkReminders(){
 }
 /* ---------- Azan (plays in-app at Zohor, Asar, Maghrib, Isyak) ---------- */
 const AZ={makkah:{f:"azan-makkah.mp3"},a2:{f:"azan-2.mp3"},a3:{f:"azan-3.mp3"}};
-const AZAN_IDS=["zohor","asar","maghrib","isyak"];
+const AZAN_IDS=["subuh","zohor","asar","maghrib","isyak"];
+const AZ_SUBUH="azan-subuh.mp3";
 const azAudio=new Audio();azAudio.preload="auto";
 ["play","pause","ended"].forEach(ev=>azAudio.addEventListener(ev,()=>updAzan()));
 let azUnlocked=false;
@@ -377,8 +378,8 @@ function unlockAudio(){ // iOS needs one user gesture before audio can start by 
   azAudio.play().then(()=>{azAudio.pause();azAudio.currentTime=0;azAudio.muted=false}).catch(()=>{azAudio.muted=false;azUnlocked=false});
 }
 ["touchend","click"].forEach(e=>document.addEventListener(e,unlockAudio,{passive:true}));
-function playAzan(name){
-  azAudio.muted=false;azAudio.src=AZ[pr.azan].f;azAudio.currentTime=0;
+function playAzan(name,id){
+  azAudio.muted=false;azAudio.src=id==="subuh"?AZ_SUBUH:AZ[pr.azan].f;azAudio.currentTime=0;
   azAudio.play().then(()=>{if(name)toast("Azan "+name)}).catch(()=>toast("Tap the screen once to allow azan sound"));
 }
 function stopAzan(){azAudio.pause();azAudio.currentTime=0}
@@ -394,7 +395,7 @@ function checkAzan(){
   if(!pr.azanOn)return;const now=new Date(),t=dayTimes(now);if(!t)return;
   AZAN_IDS.forEach(id=>{const at=t[id],k=today()+"az"+id;
     if(now>=at&&now<new Date(at.getTime()+3*60000)&&!pr.fired[k]){
-      pr.fired[k]=1;Object.keys(pr.fired).slice(0,-24).forEach(x=>delete pr.fired[x]);savePr();playAzan(PNAMES[id]);
+      pr.fired[k]=1;Object.keys(pr.fired).slice(0,-24).forEach(x=>delete pr.fired[x]);savePr();playAzan(PNAMES[id],id);
     }});
 }
 updAzan();

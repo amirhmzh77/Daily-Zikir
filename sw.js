@@ -1,9 +1,9 @@
-const CACHE = "zikir-v3";
+const CACHE = "zikir-v4";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-180.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
     await c.addAll(FILES);
-    for (const a of ["./azan-makkah.mp3", "./azan-2.mp3", "./azan-3.mp3"]) { try { await c.add(a); } catch (_) {} }
+    for (const a of ["./azan-makkah.mp3", "./azan-2.mp3", "./azan-3.mp3", "./azan-subuh.mp3"]) { try { await c.add(a); } catch (_) {} }
   }));
   self.skipWaiting();
 });

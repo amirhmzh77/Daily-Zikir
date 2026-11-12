@@ -101,7 +101,7 @@ input{-webkit-user-select:text;user-select:text}
 .azanrow select{flex:1;min-width:0}
 .azanrow button.on{border-color:var(--gold);color:var(--gold);font-weight:600}
 .aznote{font-size:11px;color:var(--muted);margin:0 2px 10px}
-.kahf{display:flex;align-items:center;gap:12px;background:#fff3e1;border:1px solid #f0d8b4;border-radius:14px;padding:10px 12px;margin-bottom:10px;cursor:pointer}
+.kahf{display:flex;align-items:center;gap:12px;background:#fff3e1;border:1px solid #f0d8b4;border-radius:14px;padding:10px 12px;margin:14px 0 0;cursor:pointer}
 .kahf .kt{flex:1;min-width:0}
 .kahf .kt b{display:block;font-size:15px}
 .kahf .kt span{font-size:12px;color:var(--muted)}
@@ -125,10 +125,10 @@ input{-webkit-user-select:text;user-select:text}
   <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
   <button id="azPlay" onclick="testAzan()">▶ Test</button>
 </div>
-<div id="kahf"></div>
 <div class="aznote">Azan plays at Subuh, Zohor, Asar, Maghrib &amp; Isyak while the app is open. Subuh uses its own Fajr azan.</div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
+<div id="kahf"></div>
 <div class="sheetbg" id="sheet" onclick="if(event.target===this)closeAdd()">
   <div class="sheet">
     <h3 id="sheetTitle">Add count done outside the app</h3>

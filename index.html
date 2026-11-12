@@ -101,6 +101,14 @@ input{-webkit-user-select:text;user-select:text}
 .azanrow select{flex:1;min-width:0}
 .azanrow button.on{border-color:var(--gold);color:var(--gold);font-weight:600}
 .aznote{font-size:11px;color:var(--muted);margin:0 2px 10px}
+.kahf{display:flex;align-items:center;gap:12px;background:#fff3e1;border:1px solid #f0d8b4;border-radius:14px;padding:10px 12px;margin-bottom:10px;cursor:pointer}
+.kahf .kt{flex:1;min-width:0}
+.kahf .kt b{display:block;font-size:15px}
+.kahf .kt span{font-size:12px;color:var(--muted)}
+.kahf .ka{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;font-size:22px;color:var(--gold);direction:rtl}
+.kahf .kc{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gold);flex:none}
+.kahf.done{background:#e8f6ee;border-color:#bfe3cf}
+.kahf.done .kc{background:var(--ok);border-color:var(--ok);color:#fff}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
 .toast.show{opacity:1}
 </style>
@@ -117,6 +125,7 @@ input{-webkit-user-select:text;user-select:text}
   <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
   <button id="azPlay" onclick="testAzan()">▶ Test</button>
 </div>
+<div id="kahf"></div>
 <div class="aznote">Azan plays at Subuh, Zohor, Asar, Maghrib &amp; Isyak while the app is open. Subuh uses its own Fajr azan.</div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
@@ -213,7 +222,7 @@ function streak(){
 }
 
 function render(){
-  renderPrayer();
+  renderPrayer();renderKahf();
   const k=today(),now=new Date();
   const _t=dayTimes(now);document.getElementById("date").innerHTML=`${DAYS_MS[now.getDay()]}, ${now.getDate()} ${MONTHS_MS[now.getMonth()]} ${now.getFullYear()}`+(_t&&_t.hijri?`<div class="hj">${hijriStr(_t.hijri)}${_t.src==="aladhan"?" (approx.)":""}</div>`:"");
   document.getElementById("streak").textContent="💎 "+streak()+" day"+(streak()===1?"":"s");
@@ -398,9 +407,39 @@ function checkAzan(){
       pr.fired[k]=1;Object.keys(pr.fired).slice(0,-24).forEach(x=>delete pr.fired[x]);savePr();playAzan(PNAMES[id],id);
     }});
 }
+/* ---------- Surah Al-Kahf: Thursday Maghrib -> Friday Maghrib ---------- */
+function kahfKey(now){
+  const t=dayTimes(now);if(!t)return null;const d=now.getDay();
+  if(d===4&&now>=t.maghrib)return dkey(new Date(now.getFullYear(),now.getMonth(),now.getDate()+1));
+  if(d===5&&now<t.maghrib)return dkey(now);
+  return null;
+}
+function kahfEnd(now){
+  const d=now.getDay(),f=d===5?now:new Date(now.getFullYear(),now.getMonth(),now.getDate()+1),t=dayTimes(f);return t?t.maghrib:null;
+}
+function renderKahf(){
+  const el=document.getElementById("kahf");if(!el)return;
+  const now=new Date(),key=kahfKey(now);
+  if(!key){el.innerHTML="";return}
+  const done=!!(store.kahf&&store.kahf[key]),end=kahfEnd(now);
+  el.innerHTML=`<div class="kahf ${done?"done":""}" onclick="toggleKahf()"><div class="ka">سُورَةُ الْكَهْفِ</div><div class="kt"><b>Surah Al-Kahf${done?" ✓":""}</b><span>${done?"Done for this Jumaat":"Recite before Maghrib"+(end?" "+fmt(end):"")+" on Friday"}</span></div><div class="kc">${done?"✓":""}</div></div>`;
+}
+function toggleKahf(){
+  const key=kahfKey(new Date());if(!key)return;
+  store.kahf=store.kahf||{};store.kahf[key]=store.kahf[key]?0:1;save();
+  if(store.kahf[key]){vib([30,40,30]);toast("Masha'Allah, Al-Kahf done")}
+  renderKahf();
+}
+function checkKahf(){
+  if(!pr.notify||typeof Notification==="undefined"||Notification.permission!=="granted")return;
+  const now=new Date(),t=dayTimes(now),key=kahfKey(now);if(!t||!key||(store.kahf&&store.kahf[key]))return;
+  const d=now.getDay(),mk=d===4?"kahfThu":"kahfFri",at=new Date((d===4?t.maghrib:t.asar).getTime()+pr.offset*60000),fk=today()+mk;
+  if(now>=at&&!pr.fired[fk]){pr.fired[fk]=1;savePr();
+    notify("Surah Al-Kahf",d===4?"Jumaat has begun – recite Al-Kahf any time until Friday Maghrib":"Last stretch – recite Al-Kahf before Maghrib today",fk)}
+}
 updAzan();
-setInterval(()=>{renderPrayer();checkReminders();checkAzan()},20000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders();checkAzan()}});
+setInterval(()=>{renderPrayer();checkReminders();checkAzan();checkKahf()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders();checkAzan();checkKahf()}});
 if(pr.lat==null&&"geolocation" in navigator)getLoc();else initPrayer();
 
 render();

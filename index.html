@@ -134,6 +134,7 @@ input{-webkit-user-select:text;user-select:text}
 .oh b{font-size:14px}.oh .cnt{font-size:13px;font-weight:700;color:var(--gold);white-space:nowrap}
 .oc.done .cnt{color:var(--ok)}
 .oar{font-family:"Amiri","Noto Naskh Arabic","Geeza Pro",serif;direction:rtl;text-align:right;font-size:21px;line-height:1.95;color:#4b5f56}
+.otr{margin-top:6px}.otr summary{font-size:12px;color:var(--gold);font-weight:600;cursor:pointer;list-style:none;padding:4px 0}.otr summary::-webkit-details-marker{display:none}.otr summary::before{content:"▸ "}.otr[open] summary::before{content:"▾ "}.otr div{font-size:13px;line-height:1.55;color:var(--text);background:#f6faf7;border-radius:10px;padding:8px 10px;margin-top:2px}
 .onote{font-size:12px;color:var(--muted);margin-top:4px}
 .of{display:flex;gap:10px;align-items:center;margin-top:8px}
 .pbar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.pbar b{display:block;height:100%;background:var(--gold)}
@@ -509,6 +510,57 @@ const OPT={
   pagi:_dayNight(true),
   petang:_dayNight(false)
 };
+/* ---------- Terjemahan Melayu (ringkas; bukan teks rasmi buku) ---------- */
+const _T_TAH="Tiada tuhan yang berhak disembah melainkan Allah semata-mata, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya segala puji, dan Dia Maha Berkuasa atas segala sesuatu.";
+const _T_KURSI="Allah, tiada tuhan melainkan Dia, Yang Maha Hidup lagi Maha Berdiri sendiri. Tidak mengantuk dan tidak tidur. Milik-Nya apa yang di langit dan di bumi. Siapakah yang dapat memberi syafaat di sisi-Nya melainkan dengan izin-Nya? Dia mengetahui apa yang di hadapan mereka dan di belakang mereka, dan mereka tidak meliputi sesuatu pun daripada ilmu-Nya melainkan apa yang Dia kehendaki. Kursi-Nya meliputi langit dan bumi, dan memelihara keduanya tidak memberatkan-Nya. Dialah Yang Maha Tinggi lagi Maha Agung.";
+const _T_IKH="Katakanlah: Dialah Allah Yang Maha Esa. Allah tempat bergantung segala makhluk. Dia tidak beranak dan tidak diperanakkan. Dan tiada sesiapa pun yang setara dengan-Nya.";
+const _T_FAL="Katakanlah: Aku berlindung kepada Tuhan yang menguasai subuh, daripada kejahatan makhluk yang Dia ciptakan, daripada kejahatan malam apabila gelap gelita, daripada kejahatan peniup-peniup pada simpulan-simpulan, dan daripada kejahatan orang yang dengki apabila dia berdengki.";
+const _T_NAS="Katakanlah: Aku berlindung kepada Tuhan sekalian manusia, Raja sekalian manusia, Tuhan sekalian manusia, daripada kejahatan pembisik yang bersembunyi, yang membisikkan (kejahatan) ke dalam dada manusia, daripada golongan jin dan manusia.";
+const _T_ILM="Ya Allah, aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik dan amalan yang diterima.";
+const MS_SOLAT={
+ s_ist:"Aku memohon ampun kepada Allah.",
+ s_sal:"Ya Allah, Engkaulah As-Salam (Maha Sejahtera) dan daripada-Mu kesejahteraan. Maha Berkat Engkau, wahai Tuhan yang memiliki keagungan dan kemuliaan.",
+ s_la1:_T_TAH+" Ya Allah, tiada yang dapat menghalang apa yang Engkau berikan, dan tiada yang dapat memberi apa yang Engkau halang; kebesaran seseorang tidak memberi manfaat kepadanya di sisi-Mu.",
+ s_la2:_T_TAH.replace(" dan Dia Maha Berkuasa atas segala sesuatu."," dan Dia Maha Berkuasa atas segala sesuatu.")+" Tiada daya dan kekuatan melainkan dengan Allah. Tiada tuhan melainkan Allah, dan kami tidak menyembah melainkan Dia. Bagi-Nya nikmat, kurniaan dan pujian yang baik. Tiada tuhan melainkan Allah, kami ikhlas beragama kepada-Nya walaupun orang kafir membencinya.",
+ s_tas:"Maha Suci Allah, segala puji bagi Allah, Allah Maha Besar. (33× setiap satu menurut kiraan anda, kemudian tahlil untuk genapkan 100.)",
+ s_tah:_T_TAH,
+ s_ikh:_T_IKH,s_fal:_T_FAL,s_nas:_T_NAS,s_kur:_T_KURSI,
+ s_yum:"Tiada tuhan melainkan Allah semata-mata, tiada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya segala puji, Dia menghidupkan dan mematikan, dan Dia Maha Berkuasa atas segala sesuatu.",
+ s_ilm:_T_ILM
+};
+function _msDN(m){
+  const hr=m?"hari ini":"malam ini",pg=m?"pagi ini":"petang ini",A=m?"berpagi":"berpetang",B=m?"berpetang":"berpagi";
+  return {
+   ta:"Aku berlindung kepada Allah daripada syaitan yang direjam.",kursi:_T_KURSI,ikh:_T_IKH,fal:_T_FAL,nas:_T_NAS,
+   mulk:`Kami ${A} dan kerajaan milik Allah, segala puji bagi Allah. Tiada tuhan melainkan Allah semata-mata, tiada sekutu bagi-Nya; bagi-Nya kerajaan dan pujian, dan Dia Maha Berkuasa atas segala sesuatu. Tuhanku, aku memohon kepada-Mu kebaikan ${hr} dan kebaikan selepasnya; aku berlindung kepada-Mu daripada kejahatan ${hr} dan kejahatan selepasnya. Tuhanku, aku berlindung kepada-Mu daripada kemalasan dan buruknya ketuaan. Tuhanku, aku berlindung kepada-Mu daripada azab di neraka dan azab di kubur.`,
+   bika:`Ya Allah, dengan-Mu kami ${A}, dengan-Mu kami ${B}, dengan-Mu kami hidup, dengan-Mu kami mati, ${m?"dan kepada-Mu kebangkitan":"dan kepada-Mu tempat kembali"}.`,
+   sayyid:"Ya Allah, Engkau Tuhanku, tiada tuhan melainkan Engkau. Engkau menciptakan aku dan aku hamba-Mu; aku berpegang pada perjanjian dan janji-Mu sekadar kemampuanku. Aku berlindung kepada-Mu daripada kejahatan perbuatanku. Aku mengakui nikmat-Mu atasku dan aku mengakui dosaku, maka ampunilah aku, kerana tiada yang mengampunkan dosa melainkan Engkau.",
+   ush:`Ya Allah, sesungguhnya aku ${m?"berpagi":"berpetang"} dengan bersaksi kepada-Mu, dan aku jadikan saksi pemikul Arasy-Mu, malaikat-malaikat-Mu dan seluruh makhluk-Mu, bahawa Engkaulah Allah, tiada tuhan melainkan Engkau semata-mata, tiada sekutu bagi-Mu, dan bahawa Muhammad ialah hamba dan rasul-Mu.`,
+   nima:`Ya Allah, apa-apa nikmat yang ada pada diriku atau pada mana-mana makhluk-Mu ${pg}, maka ia daripada-Mu semata-mata, tiada sekutu bagi-Mu. Maka bagi-Mu segala puji dan bagi-Mu syukur.`,
+   afini:"Ya Allah, sihatkanlah badanku. Ya Allah, sihatkanlah pendengaranku. Ya Allah, sihatkanlah penglihatanku. Tiada tuhan melainkan Engkau. Ya Allah, aku berlindung kepada-Mu daripada kekufuran dan kefakiran, dan aku berlindung kepada-Mu daripada azab kubur. Tiada tuhan melainkan Engkau.",
+   hasbi:"Cukuplah Allah bagiku, tiada tuhan melainkan Dia. Kepada-Nya aku bertawakal, dan Dialah Tuhan Arasy yang agung.",
+   afw:"Ya Allah, aku memohon kepada-Mu kemaafan dan keselamatan di dunia dan akhirat. Ya Allah, aku memohon kemaafan dan keselamatan dalam agamaku, dunia, keluarga dan hartaku. Ya Allah, tutuplah keaibanku dan tenteramkanlah ketakutanku. Ya Allah, peliharalah aku dari hadapanku, belakangku, kananku, kiriku dan atasku, dan aku berlindung dengan kebesaran-Mu daripada dibinasakan secara tiba-tiba dari bawahku.",
+   ghayb:"Ya Allah, Yang Mengetahui perkara ghaib dan nyata, Pencipta langit dan bumi, Tuhan dan Pemilik segala sesuatu. Aku bersaksi bahawa tiada tuhan melainkan Engkau. Aku berlindung kepada-Mu daripada kejahatan diriku, kejahatan syaitan dan syiriknya, dan daripada aku melakukan kejahatan ke atas diriku atau membawanya kepada seorang muslim.",
+   bism:"Dengan nama Allah yang tiada sesuatu pun di bumi mahupun di langit dapat memudaratkan bersama nama-Nya, dan Dialah Yang Maha Mendengar lagi Maha Mengetahui.",
+   radi:"Aku reda Allah sebagai Tuhan, Islam sebagai agama, dan Muhammad ﷺ sebagai nabi.",
+   hayy:"Wahai Yang Maha Hidup, wahai Yang Maha Berdiri sendiri, dengan rahmat-Mu aku memohon pertolongan. Perbaikilah segala urusanku dan jangan serahkan aku kepada diriku walau sekelip mata.",
+   khayr:`Kami ${A} dan kerajaan milik Allah, Tuhan sekalian alam. Ya Allah, aku memohon kepada-Mu kebaikan ${hr}: kemenangannya, pertolongannya, cahayanya, keberkatannya dan petunjuknya; aku berlindung kepada-Mu daripada kejahatan yang ada padanya dan kejahatan selepasnya.`,
+   fitra:`Kami ${A} di atas fitrah Islam, kalimah ikhlas, agama nabi kami Muhammad ﷺ dan agama bapa kami Ibrahim yang lurus lagi berserah diri, dan dia bukan daripada golongan musyrik.`,
+   tasb:"Maha Suci Allah dan dengan memuji-Nya.",
+   tah10:_T_TAH,tah100:_T_TAH,
+   adad:"Maha Suci Allah dan dengan memuji-Nya sebanyak bilangan makhluk-Nya, sebanyak keredaan diri-Nya, seberat Arasy-Nya dan sebanyak dakwat kalimah-Nya.",
+   ilm:_T_ILM,istg:"Aku memohon ampun kepada Allah dan bertaubat kepada-Nya.",
+   tamm:"Aku berlindung dengan kalimah-kalimah Allah yang sempurna daripada kejahatan makhluk yang Dia ciptakan.",
+   sel:"Ya Allah, selawat dan salam ke atas nabi kami Muhammad."
+  };
+}
+(function(){
+  OPT.solat.forEach(x=>{x.ms=MS_SOLAT[x.id]||""});
+  const g=_msDN(true),e=_msDN(false);
+  OPT.pagi.forEach(x=>{x.ms=g[x.id.slice(3)]||""});
+  OPT.petang.forEach(x=>{x.ms=e[x.id.slice(3)]||""});
+})();
+
 let optTab="solat";
 function optCount(id){return (store.days[today()]&&store.days[today()]["opt:"+id])||0}
 function openOpt(){
@@ -544,6 +596,7 @@ function renderOpt(){
     return `<div class="oc ${c>=it.n?"done":""}" id="oc_${it.id}" onclick="optTap('${it.id}')">
       <div class="oh"><b>${it.t}</b><span class="cnt">${c} / ${it.n}</span></div>
       <div class="oar">${it.ar}</div>
+      ${it.ms?`<details class="otr" onclick="event.stopPropagation()"><summary>Terjemahan</summary><div>${it.ms}</div></details>`:""}
       ${it.note?`<div class="onote">${it.note}</div>`:""}
       <div class="of"><div class="pbar"><b style="width:${Math.min(100,Math.round(c/it.n*100))}%"></b></div><button onclick="optMinus('${it.id}',event)">−</button></div>
     </div>`}).join("");

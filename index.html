@@ -109,6 +109,7 @@ input{-webkit-user-select:text;user-select:text}
 .kahf .kc{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gold);flex:none}
 .kahf.done{background:#e8f6ee;border-color:#bfe3cf}
 .kahf.done .kc{background:var(--ok);border-color:var(--ok);color:#fff}
+.qline{margin:-2px 2px 8px;font-size:13px;color:var(--gold);font-weight:600;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
 .toast.show{opacity:1}
 </style>
@@ -120,6 +121,7 @@ input{-webkit-user-select:text;user-select:text}
 </header>
 <div class="week" id="week"></div>
 <div class="prayer" id="prayer"></div>
+<div class="qline" id="qline" onclick="openQibla()"></div>
 <div class="azanrow">
   <button id="azTog" onclick="toggleAzan()">🔊 Azan: Off</button>
   <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
@@ -138,6 +140,26 @@ input{-webkit-user-select:text;user-select:text}
       <button onclick="setAdd(10)">+10</button><button onclick="setAdd(33)">+33</button><button onclick="setAdd(50)">+50</button><button onclick="setAdd(99999)">Finish all</button>
     </div>
     <div class="srow"><button class="btn" onclick="closeAdd()">Cancel</button><button class="btn go" onclick="doAdd()">Add</button></div>
+  </div>
+</div>
+<div class="sheetbg" id="qsheet" onclick="if(event.target===this)closeQibla()">
+  <div class="sheet" style="text-align:center">
+    <h3>Arah Qiblat</h3>
+    <p id="qSub"></p>
+    <svg id="qsvg" viewBox="0 0 240 240" width="250" height="250" style="max-width:100%">
+      <circle cx="120" cy="120" r="108" fill="#fff" stroke="#cfe5d9" stroke-width="3"/>
+      <g id="qring">
+        <text x="120" y="48" text-anchor="middle" font-size="16" font-weight="700" fill="#3b4d45">U</text>
+        <text x="196" y="126" text-anchor="middle" font-size="14" fill="#7a9187">T</text>
+        <text x="120" y="204" text-anchor="middle" font-size="14" fill="#7a9187">S</text>
+        <text x="44" y="126" text-anchor="middle" font-size="14" fill="#7a9187">B</text>
+        <g id="qmark"><line x1="120" y1="120" x2="120" y2="52" stroke="#c97f58" stroke-width="3" stroke-linecap="round"/><text x="120" y="42" text-anchor="middle" font-size="24">🕋</text></g>
+      </g>
+      <polygon points="120,4 111,22 129,22" fill="#47a877"/>
+      <circle cx="120" cy="120" r="6" fill="#c97f58"/>
+    </svg>
+    <div id="qStatus" style="font-size:14px;margin:8px 0 12px;min-height:20px"></div>
+    <div class="srow"><button class="btn" onclick="closeQibla()">Close</button></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -350,6 +372,7 @@ function renderPrayer(){
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
   <button onclick="getLoc()">📍</button></div>${strip}`;
+  const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText()+" · tap for compass";
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
 async function toggleNotify(){
@@ -373,6 +396,47 @@ function checkReminders(){
       notify(id==="isyak"?"Time for Surah Al-Mulk":`Time for ${PNAMES[id]} zikir`,id==="isyak"?"Recite once after Isha prayer":"Subhanallah, Alhamdulillah, Istighfar, Selawat – 100x each",k);
     }
   });
+}
+/* ---------- Qiblat ---------- */
+const KAABA={lat:21.4225,lng:39.8262};
+const DIR8=["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
+function qiblaBearing(){
+  const la=pr.lat??FALLBACK.lat,lo=pr.lng??FALLBACK.lng,R=Math.PI/180,p1=la*R,p2=KAABA.lat*R,dl=(KAABA.lng-lo)*R;
+  return (Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))/R+360)%360;
+}
+function qiblaText(){const b=qiblaBearing();return `${Math.round(b)}° ${DIR8[Math.round(b/45)%8]}`}
+let qHeading=null,qOpen=false,qAligned=false;
+function updQibla(){
+  const q=qiblaBearing();
+  document.getElementById("qmark").setAttribute("transform",`rotate(${q} 120 120)`);
+  document.getElementById("qring").setAttribute("transform",`rotate(${qHeading===null?0:-qHeading} 120 120)`);
+  document.getElementById("qSub").textContent=`Qiblat ${qiblaText()} dari Utara · ${pr.lat==null?"lokasi lalai Bandar Penawar (tekan 📍)":"lokasi anda"}`;
+  const st=document.getElementById("qStatus");
+  if(qHeading===null){st.textContent="Compass sensor not active – face the 🕋 direction shown, measured from Utara (U).";qAligned=false;return}
+  let diff=((q-qHeading+540)%360)-180;
+  const ok=Math.abs(diff)<6;
+  st.innerHTML=ok?"<b style='color:#47a877'>✓ Menghadap Qiblat</b>":`Turn ${diff>0?"right":"left"} ${Math.abs(Math.round(diff))}°`;
+  if(ok&&!qAligned)vib([30,30,30]);qAligned=ok;
+}
+function onOri(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading==="number")h=e.webkitCompassHeading;
+  else if(e.absolute&&e.alpha!=null)h=(360-e.alpha)%360;
+  if(h===null)return;qHeading=h;if(qOpen)updQibla();
+}
+async function openQibla(){
+  qOpen=true;document.getElementById("qsheet").classList.add("show");updQibla();
+  try{
+    if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){
+      const p=await DeviceOrientationEvent.requestPermission();if(p!=="granted"){toast("Compass permission denied");return}
+    }
+    window.removeEventListener("deviceorientationabsolute",onOri);window.removeEventListener("deviceorientation",onOri);
+    window.addEventListener("deviceorientationabsolute",onOri,true);window.addEventListener("deviceorientation",onOri,true);
+  }catch(e){}
+}
+function closeQibla(){
+  qOpen=false;document.getElementById("qsheet").classList.remove("show");
+  window.removeEventListener("deviceorientationabsolute",onOri);window.removeEventListener("deviceorientation",onOri);qHeading=null;
 }
 /* ---------- Azan (plays in-app at Zohor, Asar, Maghrib, Isyak) ---------- */
 const AZ={makkah:{f:"azan-makkah.mp3"},a2:{f:"azan-2.mp3"},a3:{f:"azan-3.mp3"}};

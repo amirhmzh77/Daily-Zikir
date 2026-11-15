@@ -127,7 +127,6 @@ input{-webkit-user-select:text;user-select:text}
   <select id="azSel" onchange="setAz(this.value)"><option value="makkah">Makkah</option><option value="a2">Azan 2</option><option value="a3">Azan 3</option></select>
   <button id="azPlay" onclick="testAzan()">▶ Test</button>
 </div>
-<div class="aznote">Azan plays at Subuh, Zohor, Asar, Maghrib &amp; Isyak while the app is open. Subuh uses its own Fajr azan.</div>
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
 <div id="kahf"></div>
@@ -372,7 +371,7 @@ function renderPrayer(){
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
   <button onclick="getLoc()">📍</button></div>${strip}`;
-  const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText()+" · tap for compass";
+  const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText();
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
 async function toggleNotify(){

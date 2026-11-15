@@ -371,7 +371,7 @@ function renderPrayer(){
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
   <button onclick="getLoc()">📍</button></div>${strip}`;
-  const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText();
+  const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText()+" · tap for compass";
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
 async function toggleNotify(){

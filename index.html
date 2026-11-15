@@ -88,6 +88,13 @@ input{-webkit-user-select:text;user-select:text}
 .sheetbg{position:fixed;inset:0;background:rgba(40,60,50,.35);display:none;align-items:flex-end;justify-content:center;z-index:10}
 .sheetbg.show{display:flex}
 .sheet{width:100%;max-width:520px;background:var(--card);border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);box-shadow:0 -8px 24px rgba(0,0,0,.15)}
+#nudge .nd{display:flex;align-items:center;gap:8px;background:#fde8da;border:1px solid #f3c9ae;border-radius:14px;padding:9px 12px;margin:0 0 8px;font-size:13px}
+#nudge .nd span{flex:1;line-height:1.35}#nudge .nd b{display:block;font-size:13px}
+#nudge .nd button{border:none;border-radius:10px;padding:7px 10px;font-size:13px;font-weight:600;background:var(--ok);color:#fff}
+#nudge .nd button.x{background:transparent;color:var(--muted);padding:7px 6px}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;font-size:15px;background:#fff}
+.dr.on{background:#eaf7ef;border-color:#bfe3cf;color:var(--ok);font-weight:600}
+.day.past{cursor:pointer}
 .sheet h3{margin:0 0 4px;font-size:16px}
 .sheet p{margin:0 0 12px;font-size:12px;color:var(--muted)}
 .sheet input{width:100%;font-size:28px;text-align:center;padding:12px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--text);outline:none}
@@ -143,6 +150,7 @@ input{-webkit-user-select:text;user-select:text}
   <div class="streak" id="streak"></div>
 </header>
 <div class="week" id="week"></div>
+<div id="nudge"></div>
 <div class="prayer" id="prayer"></div>
 <div class="qline" id="qline" onclick="openQibla()"></div>
 <div class="azanrow">
@@ -153,6 +161,10 @@ input{-webkit-user-select:text;user-select:text}
 <div class="tabs" id="tabs"></div>
 <main id="main"></main>
 <div id="kahf"></div>
+<div class="sheetbg" id="daysheet" onclick="if(event.target===this)closeDay()">
+  <div class="sheet"><h3 id="dayTitle"></h3><p>Forgot to mark? Tap a prayer to mark it done (or undo).</p><div id="dayRows"></div>
+  <div class="srow"><button class="btn" onclick="closeDay()">Close</button></div></div>
+</div>
 <div class="optcard" onclick="openOpt()"><span>📿</span><div><b>Zikir Pagi Petang</b><small>Selepas Solat · Pagi · Petang</small></div><em>›</em></div>
 <div class="sheetbg" id="sheet" onclick="if(event.target===this)closeAdd()">
   <div class="sheet">
@@ -286,7 +298,7 @@ function render(){
   let w="";
   const wk0=new Date(now.getFullYear(),now.getMonth(),now.getDate()-now.getDay()); // week starts Ahad
   for(let i=0;i<7;i++){const d=new Date(wk0.getFullYear(),wk0.getMonth(),wk0.getDate()+i),kk=dkey(d),p=dayTotals(kk),isToday=kk===k,future=kk>k;
-    w+=`<div class="day ${isToday?"today":""} ${p>=1?"full":""} ${future?"future":""}">${DAYS_MS[i][0]}</div>`}
+    w+=`<div onclick="${future?"":"openDay('"+kk+"')"}" class="day past ${isToday?"today":""} ${p>=1?"full":""} ${future?"future":""}">${DAYS_MS[i][0]}</div>`}
   document.getElementById("week").innerHTML=w;
   // tabs
   document.getElementById("tabs").innerHTML=SLOTS.map(s=>{const dn=s.items.filter(i=>cnt(k,s.id,i)>=ITEMS[i].target).length;return `<button class="tab ${s.id===slot?"active":""} ${slotDone(k,s.id)?"done":""}" onclick="slot='${s.id}';render()">${s.tab}<small>${slotDone(k,s.id)?"✓ done":dn+"/"+s.items.length+" done"}</small></button>`}).join("");
@@ -406,6 +418,7 @@ function renderPrayer(){
   <button onclick="cycleOffset()" title="Minutes after azan">⏱ ${pr.offset}m</button>
   <button class="${pr.notify?"on":""}" onclick="toggleNotify()">${pr.notify?"🔔":"🔕"}</button>
   <button onclick="getLoc()">📍</button></div>${strip}`;
+  renderNudge();
   const ql=document.getElementById("qline");if(ql)ql.textContent="🧭 Qiblat "+qiblaText()+" · tap for compass";
 }
 function cycleOffset(){pr.offset=OFFSETS[(OFFSETS.indexOf(pr.offset)+1)%OFFSETS.length];savePr();render()}
@@ -536,6 +549,36 @@ function renderOpt(){
     </div>`}).join("");
 }
 
+
+/* ---------- Forgot-to-mark helpers ---------- */
+function slotTimeOk(t,id){return t&&t[id]&&new Date()>=new Date(t[id].getTime()+10*60000)}
+function renderNudge(){
+  const el=document.getElementById("nudge");if(!el)return;
+  const t=dayTimes(new Date());
+  const due=t?SLOTS.filter(s=>slotTimeOk(t,s.id)&&!slotDone(today(),s.id)&&!(pr.dis&&pr.dis[today()+s.id])):[];
+  el.innerHTML=due.map(s=>`<div class="nd"><span><b>${s.tab}</b>Already done? Mark it so your streak stays.</span><button onclick="markSlot('${s.id}','${today()}')">✓ Done</button><button class="x" onclick="dismissNudge('${s.id}')">✕</button></div>`).join("");
+}
+function markSlot(id,k){const d=dayData(k),s=SLOTS.find(x=>x.id===id);s.items.forEach(i=>d[id+":"+i]=ITEMS[i].target);save();toast("Marked "+s.name+" done");render()}
+function unmarkSlot(id,k){const d=dayData(k),s=SLOTS.find(x=>x.id===id);s.items.forEach(i=>d[id+":"+i]=0);save();render()}
+function dismissNudge(id){pr.dis=pr.dis||{};pr.dis[today()+id]=1;Object.keys(pr.dis).slice(0,-9).forEach(x=>delete pr.dis[x]);savePr();renderNudge()}
+let dayEdit=null;
+function openDay(k){dayEdit=k;renderDay();document.getElementById("daysheet").classList.add("show")}
+function closeDay(){document.getElementById("daysheet").classList.remove("show");dayEdit=null}
+function renderDay(){
+  if(!dayEdit)return;const [y,m,dd]=dayEdit.split("-").map(Number),d=new Date(y,m-1,dd);
+  document.getElementById("dayTitle").textContent=`${DAYS_MS[d.getDay()]}, ${dd} ${MONTHS_MS[m-1]}`;
+  document.getElementById("dayRows").innerHTML=SLOTS.map(s=>{const on=slotDone(dayEdit,s.id);
+    return `<div class="dr ${on?"on":""}" onclick="${on?"unmarkSlot":"markSlot"}('${s.id}','${dayEdit}');renderDay()"><span>${s.tab}</span><span>${on?"✓ Done":"Mark done"}</span></div>`}).join("");
+}
+function checkStreakNudge(){
+  if(!pr.notify||Notification.permission!=="granted")return;
+  const now=new Date(),k=today()+"streak";
+  if(now.getHours()>=21&&now.getMinutes()>=30||now.getHours()>=22){
+    if(!pr.fired[k]&&dayTotals(today())<1){pr.fired[k]=1;savePr();
+      notify("Don't lose your 💎 streak","Today is not fully marked yet. If you already did your zikir, open the app and mark it.",k)}
+  }
+}
+
 /* ---------- Qiblat ---------- */
 const KAABA={lat:21.4225,lng:39.8262};
 const DIR8=["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
@@ -641,7 +684,7 @@ function checkKahf(){
     notify("Surah Al-Kahf",d===4?"Jumaat has begun – recite Al-Kahf any time until Friday Maghrib":"Last stretch – recite Al-Kahf before Maghrib today",fk)}
 }
 updAzan();
-setInterval(()=>{renderPrayer();checkReminders();checkAzan();checkKahf()},20000);
+setInterval(()=>{renderPrayer();checkReminders();checkAzan();checkKahf();checkStreakNudge()},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){initPrayer();checkReminders();checkAzan();checkKahf()}});
 if(pr.lat==null&&"geolocation" in navigator)getLoc();else initPrayer();
 

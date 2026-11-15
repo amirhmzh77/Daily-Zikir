@@ -1,4 +1,4 @@
-const CACHE = "zikir-v6";
+const CACHE = "zikir-v7";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-180.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
